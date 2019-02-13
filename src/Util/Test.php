@@ -62,6 +62,11 @@ final class Test
     /**
      * @var string
      */
+    private const REGEX_DATA_PROVIDER_CSV = '/@dataProviderCsv\s+(.*)/';
+
+    /**
+     * @var string
+     */
     private const REGEX_TEST_WITH = '/@testWith\s+/';
 
     /**
@@ -875,6 +880,35 @@ final class Test
      */
     private static function getDataFromDataProviderAnnotation(string $docComment, string $className, string $methodName): ?iterable
     {
+        if (\preg_match_all(self::REGEX_DATA_PROVIDER_CSV, $docComment, $matches)) {
+            $result = [];
+
+            foreach ($matches[1] as $match) {
+                $result[] = array_map(function ($item) {
+                    if (is_numeric($item)) {
+                        if (intval($item) == $item) {
+                            return intval($item);
+                        }
+
+                        return floatval($item);
+                    }
+
+                    if ($item === "true") {
+                        return true;
+                    }
+
+                    if ($item === "false") {
+                        return false;
+                    }
+
+                    return $item;
+                    
+                }, str_getcsv($match));
+            }
+
+            return $result;
+        }
+
         if (\preg_match_all(self::REGEX_DATA_PROVIDER, $docComment, $matches)) {
             $result = [];
 
